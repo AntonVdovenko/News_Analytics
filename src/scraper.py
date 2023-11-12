@@ -6,6 +6,7 @@ import pandas as pd
 import requests
 
 from bs4 import BeautifulSoup
+from loguru import logger
 
 
 # TODO: finish documentation
@@ -52,6 +53,7 @@ class RTScraper:
         html_page = requests.get(self.rss_link).text
         html_page = BeautifulSoup(html_page, "html.parser")
         news = html_page.findAll("item")
+        logger.info(f"Length of news {len(news)}")
         return news
 
     def __get_publication_time(
