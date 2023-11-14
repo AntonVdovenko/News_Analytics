@@ -1,4 +1,4 @@
-"""Scraper class to get news from RTS feed"""
+"""Scraper class to get news from RSS feed"""
 import datetime
 
 import bs4
@@ -9,22 +9,29 @@ from bs4 import BeautifulSoup
 from loguru import logger
 
 
-# TODO: finish documentation
 class RTScraper:
+    """Scraper class to get news from Russia Today RSS feed"""
+
     def __init__(
         self,
         rss_link: str,
     ):
+        """Init func keeping link to RSS feed
+
+        Args:
+            rss_link (str): link to RSS feed
+        """
         self.rss_link = rss_link
         return
 
     def get_latest_news(self) -> pd.DataFrame:
-        """_summary_
+        """Func to get table with all news from current RSS feed structured
 
         Returns
         -------
         pd.DataFrame
-            _description_
+            table with data regarding each piece of new including its title,
+            link, publication time and text itself
         """
         news = self.__get_news()
         news_data = {
@@ -42,13 +49,13 @@ class RTScraper:
             news_data["text"].append(self.__get_text(piece_of_new))
         return pd.DataFrame.from_dict(news_data)
 
-    def __get_news(self):
-        """_summary_
+    def __get_news(self) -> list:
+        """Func to request current RSS feed and find all peieces of news
 
         Returns
         -------
-        _type_
-            _description_
+        list
+            list containing html pieces of news
         """
         html_page = requests.get(self.rss_link).text
         html_page = BeautifulSoup(html_page, "html.parser")
@@ -60,17 +67,17 @@ class RTScraper:
         self,
         piece_of_new: bs4.element.Tag,
     ) -> datetime.datetime:
-        """_summary_
+        """Func to extract date and time of publication, transform it to datetime
 
         Parameters
         ----------
         piece_of_new : bs4.element.Tag
-            _description_
+            html piece of new to extract the date and time
 
         Returns
         -------
         datetime.datetime
-            _description_
+            time of publication with timezone appointed
         """
         time_format = "%d %b %Y %H:%M:%S %z"
         time = piece_of_new.find("pubdate").text
@@ -82,24 +89,19 @@ class RTScraper:
         self,
         piece_of_new: bs4.element.Tag,
     ) -> str:
-        """_summary_
+        """Func to get description of piece of new and extract text from html
 
         Parameters
         ----------
         piece_of_new : bs4.element.Tag
-            _description_
+            html piece of new to extract the text
 
         Returns
         -------
         str
-            _description_
+            extracted and cleand text of piece of new
         """
-        # TODO: Надо дописать, оч кривая структура
         description = piece_of_new.find("description")
-        if "img alt" in description.text:
-            raw_text = description.text.split("<br")[0].split(">")[-1]
-        else:
-            raw_text = description.text.split("<br")[0]
-        return "".join(
-            [char for char in raw_text if char.isalnum() or char == " "]
-        ).strip()
+        description = description.find(text=lambda tag: isinstance(tag, bs4.CData))
+        description = BeautifulSoup(description, "html.parser", from_encoding="utf-8")
+        return description.text.strip()
