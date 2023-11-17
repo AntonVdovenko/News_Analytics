@@ -1,4 +1,4 @@
-"""Scraper class to get news from RSS feed"""
+"""Scraper class to get news from RIA News RSS feed"""
 import datetime
 
 import bs4
@@ -9,29 +9,26 @@ from bs4 import BeautifulSoup
 from loguru import logger
 
 
-class RTScraper:
-    """Scraper class to get news from Russia Today RSS feed"""
-
+class RIAScraper:
     def __init__(
         self,
         rss_link: str,
     ):
-        """Init func keeping link to RSS feed
+        """_summary_
 
         Args:
-            rss_link (str): link to RSS feed
+            rss_link (str): _description_
         """
         self.rss_link = rss_link
         return
 
-    def get_latest_news(self) -> pd.DataFrame:
-        """Func to get table with all news from current RSS feed structured
+    def get_latest_news(
+        self,
+    ) -> pd.DataFrame:
+        """_summary_
 
-        Returns
-        -------
-        pd.DataFrame
-            table with data regarding each piece of new including its title,
-            link, publication time and text itself
+        Returns:
+            pd.DataFrame: _description_
         """
         news = self.__get_news()
         news_data = {
@@ -49,13 +46,13 @@ class RTScraper:
             news_data["text"].append(self.__get_text(piece_of_new))
         return pd.DataFrame.from_dict(news_data)
 
-    def __get_news(self) -> list:
-        """Func to request current RSS feed and find all peieces of news
+    def __get_news(
+        self,
+    ) -> list:
+        """_summary_
 
-        Returns
-        -------
-        list
-            list containing html pieces of news
+        Returns:
+            list: _description_
         """
         html_page = requests.get(self.rss_link).text
         html_page = BeautifulSoup(html_page, "html.parser")
@@ -89,19 +86,22 @@ class RTScraper:
         self,
         piece_of_new: bs4.element.Tag,
     ) -> str:
-        """Func to get description of piece of new and extract text from html
+        """Func to get full text of piece of new and extract text from html
 
-        Parameters
-        ----------
-        piece_of_new : bs4.element.Tag
-            html piece of new to extract the text
+        Args:
+            piece_of_new (bs4.element.Tag): _description_
 
-        Returns
-        -------
-        str
+        Returns:
             extracted and cleand text of piece of new
         """
-        description = piece_of_new.find("description")
-        description = description.find(text=lambda tag: isinstance(tag, bs4.CData))
-        description = BeautifulSoup(description, "html.parser", from_encoding="utf-8")
-        return description.text.strip()
+        link = piece_of_new.find("guid").text
+        full_page = requests.get(link).text
+        full_page = BeautifulSoup(full_page, "html.parser")
+        article_body = full_page.find("div", {"class": "page"}).find(
+            "div", {"itemprop": "articleBody"}
+        )
+        return article_body.text.strip()
+
+
+r = RIAScraper("https://ria.ru/export/rss2/index.xml")
+print(r.get_latest_news())
