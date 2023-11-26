@@ -15,6 +15,10 @@ from loguru import logger
 
 
 class ABCScraper(ABC):
+    """
+    Abstract class
+    """
+
     def __init__(
         self,
         rss_link: str,
@@ -90,6 +94,10 @@ class ABCScraper(ABC):
 
 
 class GeneralScraper(ABCScraper):
+    """
+    General Scrapper
+    """
+
     def __init__(
         self,
         rss_link: str,
@@ -165,6 +173,7 @@ class GeneralScraper(ABCScraper):
         time = datetime.datetime.strptime(time, time_format)
         return time
 
+    @abstractmethod
     def _get_text(
         self,
         piece_of_new: bs4.element.Tag,
@@ -181,11 +190,14 @@ class GeneralScraper(ABCScraper):
         str
             extracted and cleand text of piece of new
         """
-
-        raise NotImplementedError
+        ...
 
 
 class RTScraper(GeneralScraper):
+    """
+    RTS Scrapper
+    """
+
     def __init__(self):
         super().__init__("https://russian.rt.com/rss")
 
@@ -214,6 +226,10 @@ class RTScraper(GeneralScraper):
 
 
 class RIAScraper(GeneralScraper):
+    """
+    RIA Scraper
+    """
+
     def __init__(self):
         super().__init__("https://ria.ru/export/rss2/index.xml")
 
@@ -240,6 +256,10 @@ class RIAScraper(GeneralScraper):
 
 
 class VedomostiScraper(GeneralScraper):
+    """
+    Vedomosti Scraper
+    """
+
     def __init__(self):
         super().__init__("https://www.vedomosti.ru/rss/news.xml")
 
